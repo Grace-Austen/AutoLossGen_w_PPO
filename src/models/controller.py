@@ -149,9 +149,9 @@ class Controller(nn.Module):
 						branch_id = torch.argmax(logit).reshape((-1))
 				arc_seq[str(layer_id)] = [branch_id]
 
-				test_prob = (branch_id_dist.probs[branch_id])
+				test_prob = (branch_id_dist.probs[branch_id]).view(-1)
 				probs.append(test_prob.view(-1))
-				test_log_prob = (branch_id_dist.log_prob(branch_id))
+				test_log_prob = (branch_id_dist.log_prob(branch_id)).view(-1)
 				log_probs.append(test_log_prob.view(-1))
 				entropy = branch_id_dist.entropy()
 				entropys.append(entropy.view(-1))
