@@ -10,8 +10,8 @@ import copy
 
 multiprocessing.set_start_method('spawn', force=True)
 
-def consume(worker, results_queue, model, data, epoch=-1, loss_fun=None):
-	get_acc(worker, model, data, epoch, loss_fun)
+def consume(worker, results_queue, model, data, data_processor, epoch=-1, loss_fun=None):
+	get_acc(worker, model, data, data_processor, epoch, loss_fun)
 	results_queue.put(worker)
 
 class PPO(object):
@@ -110,7 +110,6 @@ class PPO(object):
 		'validation_data': validation_data,
 		}
 
-
 		for arch_epoch in range(self.arch_epochs):
 			cur_model = copy.deepcopy(model)
 			results_queue = Queue()
@@ -120,9 +119,9 @@ class PPO(object):
 
 			for episode in range(self.episodes):
 				actions_p, actions_log_p, actions_index = self.controller.sample()
-				actions_p = actions_p.cpu().numpy().tolist()
-				actions_log_p = actions_log_p.cpu().numpy().tolist()
-				actions_index = actions_index.cpu().numpy().tolist()
+				actions_p = actions_p.cpu().detach().numpy().tolist()
+				actions_log_p = actions_log_p.cpu().detach().numpy().tolist()
+				# actions_index = actions_index.cpu().detach().numpy().tolist()
 
 				if episode < self.episodes // 3:
 					worker = Worker(actions_p, actions_log_p, actions_index, self.args, 'cuda:0')
@@ -135,8 +134,7 @@ class PPO(object):
 				worker_data['train_data'] = epoch_train_data
 
 				worker_model = copy.deepcopy(cur_model)
-
-				process = Process(target=consume, args=(worker, results_queue, worker_model, worker_data, arch_epoch, self.loss_formula, False))
+				process = Process(target=consume, args=(worker, results_queue, worker_model, worker_data, data_processor, arch_epoch, self.loss_formula))
 				process.start()
 				processes.append(process)
 

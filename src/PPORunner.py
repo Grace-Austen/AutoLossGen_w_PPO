@@ -18,6 +18,27 @@ from data_loader.DataLoader import DataLoader
 from data_processor.DataProcessor import DataProcessor
 from PPO import PPO
 
+def build_optimizer(model, op_name, learning_rate, l2_weight):
+		optimizer_name = op_name.lower()
+		if optimizer_name == 'gd':
+			logging.info("Optimizer: GD")
+			optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay=l2_weight)
+			# optimizer = torch.optim.SGD(model.parameters(), lr=self.learning_rate)
+		elif optimizer_name == 'adagrad':
+			logging.info("Optimizer: Adagrad")
+			optimizer = torch.optim.Adagrad(model.parameters(), lr=learning_rate, weight_decay=l2_weight)
+			# optimizer = torch.optim.Adagrad(model.parameters(), lr=self.learning_rate)
+		elif optimizer_name == 'adam':
+			logging.info("Optimizer: Adam")
+			optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=l2_weight)
+			# optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+		else:
+			logging.error("Unknown Optimizer: " + optimizer_name)
+			assert op_name in ['GD', 'Adagrad', 'Adam']
+			optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay=l2_weight)
+			# optimizer = torch.optim.SGD(model.parameters(), lr=self.learning_rate)
+		return optimizer
+
 def main():
 	parser = argparse.ArgumentParser(description='Model')
 	# Running
@@ -143,6 +164,8 @@ def main():
 					   u_vector_size=args.u_vector_size, i_vector_size=args.i_vector_size, model_path=args.model_path,
 					   smooth_coef=args.smooth_coef, layers=args.layers, loss_func=args.loss_func
 					   )
+	model.optimizer = build_optimizer(model, args.optimizer, args.model_lr, args.l2)
+
 	# model_optimizer
 
 	if torch.cuda.device_count() > 0:
@@ -156,13 +179,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-
-
-
-
-
-
-# = optim.Adam(params=self.controller.parameters(), 
-#                                lr=args.controller_lr,
-#                                betas=(0.0, 0.999),
-#                                eps=1e-3)

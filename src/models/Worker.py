@@ -105,7 +105,7 @@ def evaluate_model(model, data, data_processor):
 	sample_ids = np.concatenate([b[global_p.K_SAMPLE_ID] for b in validate_batches])
 
 	reorder_dict = dict(zip(sample_ids, predictions))
-	predictions = np.array([reorder_dict[i] for i in validation_data[global_p.K_SAMPLE_ID]]).cuda()
+	predictions = np.array([reorder_dict[i] for i in validation_data[global_p.K_SAMPLE_ID]])
 
 	'''Calculate Reward'''
 	return model.evaluate_method(predictions, validation_data, metrics=data['metrics'])[0]

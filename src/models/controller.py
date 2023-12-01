@@ -149,7 +149,7 @@ class Controller(nn.Module):
 						branch_id = torch.argmax(logit).reshape((-1))
 				arc_seq[str(layer_id)] = [branch_id]
 
-				test_prob = (branch_id_dist.probs[branch_id]).view(-1)
+				test_prob = branch_id_dist.probs.view(-1)[branch_id]
 				probs.append(test_prob.view(-1))
 				test_log_prob = (branch_id_dist.log_prob(branch_id)).view(-1)
 				log_probs.append(test_log_prob.view(-1))
@@ -190,12 +190,12 @@ class Controller(nn.Module):
 							while first == second:
 								second = new_skip_dist.sample()
 							skip[first] = skip[second] = 0
-							prob = new_skip_dist.prob[first] * new_skip_dist.prob[second]
+							prob = new_skip_dist.probs.view(-1)[first] * new_skip_dist.probs.view(-1)[second]
 							log_prob = new_skip_dist.log_prob(first) + new_skip_dist.log_prob(second)
 						else:
 							skip = torch.ones_like(query.view(-1))
 							skip[torch.argsort(logit[:, 0], descending=True)[:2]] = 0
-							prob = skip_dist.prob[skip]
+							prob = skip_dist.probs.view(-1)[skip]
 							log_prob = skip_dist.log_prob(skip)
 							prob = torch.sum(prob)
 							log_prob = torch.sum(log_prob)
@@ -207,7 +207,7 @@ class Controller(nn.Module):
 						else:
 							rank = torch.argmax(logit[:, 0])
 						skip[rank] = 0
-						prob = new_skip_dist.prob[rank]
+						prob = new_skip_dist.probs.view(-1)[rank]
 						log_prob = new_skip_dist.log_prob(rank)
 					
 				_ids.append((branch_id.tolist()[0], skip.tolist()))
@@ -333,16 +333,16 @@ class Controller(nn.Module):
 
 				if branch_id < 4:
 					if self.sample_skip_id:
-						prob = new_skip_dist.prob[first] * new_skip_dist.prob[second]
+						prob = new_skip_dist.probs.view(-1)[first] * new_skip_dist.probs.view(-1)[second]
 						log_prob = new_skip_dist.log_prob(first) + new_skip_dist.log_prob(second)
 					else:
-						prob = skip_dist.prob[skip]
+						prob = skip_dist.probs.view(-1)[skip]
 						log_prob = skip_dist.log_prob(skip)
 						prob = torch.sum(prob)
 						log_prob = torch.sum(log_prob)
 				else:
 					new_skip_dist = Categorical(logits=logit[:, 0])
-					prob = new_skip_dist.prob[rank]
+					prob = new_skip_dist.probs.view(-1)[rank]
 					log_prob = new_skip_dist.log_prob(rank)
 			
 				log_probs.append(log_prob.view(-1))
