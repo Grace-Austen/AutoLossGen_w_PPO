@@ -301,7 +301,7 @@ class Controller(nn.Module):
 
 				test_prob = (branch_id_dist.probs[branch_id])
 				probs.append(test_prob.view(-1))
-				test_log_prob = (branch_id_dist.log_prob(branch_id))
+				test_log_prob = (branch_id_dist.log_prob(branch_id)).view(-1)
 				log_probs.append(test_log_prob.view(-1))
 
 				inputs = self.w_emb(branch_id)
